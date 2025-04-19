@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/megha270992/project-5.git'
+                git branch: 'main', url: 'https://github.com/megha270992/Project-5.git'
             }
         }
 
@@ -72,6 +72,3 @@ pipeline {
                     sh "docker push ${FRONTEND_IMAGE}:latest"
                  }
                 }
-            }
-        }
-    }
