@@ -7,6 +7,7 @@ pipeline {
         DOCKER_HUB_REPO = 'megha2709'
         BACKEND_IMAGE = "${DOCKER_HUB_REPO}/backend"
         FRONTEND_IMAGE = "${DOCKER_HUB_REPO}/frontend"
+        IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
     stages {
@@ -34,9 +35,6 @@ pipeline {
                 script {
                     sh 'ls backend/target'
                     sh 'ls frontend/target'
-                    // Optional: run jars if needed for validation
-                    // sh 'java -jar backend/target/backend-1.0-RELEASE.jar &'
-                    // sh 'java -jar frontend/target/frontend-1.0-RELEASE.jar &'
                 }
             }
         }
@@ -45,10 +43,10 @@ pipeline {
             steps {
                 script {
                     dir('backend') {
-                        sh "docker build -t ${BACKEND_IMAGE}:latest ."
+                        sh "docker build -t ${BACKEND_IMAGE}:${IMAGE_TAG} -t ${BACKEND_IMAGE}:latest ."
                     }
                     dir('frontend') {
-                        sh "docker build -t ${FRONTEND_IMAGE}:latest ."
+                        sh "docker build -t ${FRONTEND_IMAGE}:${IMAGE_TAG} -t ${FRONTEND_IMAGE}:latest ."
                     }
                 }
             }
@@ -67,8 +65,31 @@ pipeline {
         stage('Push Docker Images to Docker Hub') {
             steps {
                 script {
-                 docker.withRegistry('', 'Dockerhub') {
-                    sh "docker push ${BACKEND_IMAGE}:latest"
-                    sh "docker push ${FRONTEND_IMAGE}:latest"
-                 }
+                    docker.withRegistry('', 'Dockerhub') {
+                        sh "docker push ${BACKEND_IMAGE}:${IMAGE_TAG}"
+                        sh "docker push ${BACKEND_IMAGE}:latest"
+                        sh "docker push ${FRONTEND_IMAGE}:${IMAGE_TAG}"
+                        sh "docker push ${FRONTEND_IMAGE}:latest"
+                    }
                 }
+            }
+        }
+
+        stage('Clean Up Docker Images') {
+            steps {
+                script {
+                    sh 'docker image prune -f'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline completed!'
+        }
+        failure {
+            echo 'Pipeline failed.'
+        }
+    }
+}
